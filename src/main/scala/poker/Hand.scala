@@ -23,6 +23,10 @@ case class ThreeOfAKind(of: FaceValue, highestUnused: FaceValue, lowestUnused: F
   override def prettyPrint: String = s"Three of a Kind of ${of}s, with $highestUnused and $lowestUnused"
 }
 
+case class Straight(highest: FaceValue) extends Hand {
+  override def prettyPrint: String = s"$highest high Straight"
+}
+
 object Hand {
   def fromTuple(
     cards: (Card, Card, Card, Card, Card)
@@ -40,10 +44,24 @@ object Hand {
   ): Hand = {
     val sortedCards = List(first, second, third, fourth, fifth).sorted
 
-    maybeThreeOfAKind(sortedCards)
+    maybeStraight(sortedCards)
+      .orElse(maybeThreeOfAKind(sortedCards))
       .orElse(maybeTwoPair(sortedCards))
       .orElse(maybePair(sortedCards))
       .getOrElse(makeHighCard(sortedCards))
+  }
+
+  private def maybeStraight(cards: SortedCards): Option[Straight] = {
+    Some(cards.map(_.value)) collect {
+      case List(Two, Three, Four, Five, Ace) => Straight(Five) // Ace gets sorted after Five
+      case List(Ten, Jack, Queen, King, Ace) => Straight(Ace)
+      case List(v1, v2, v3, v4, v5)
+        if v5.ranking - v4.ranking == 1 &&
+          v4.ranking - v3.ranking == 1 &&
+          v3.ranking - v2.ranking == 1 &&
+          v2.ranking - v1.ranking == 1 =>
+        Straight(v5)
+    }
   }
 
   private def maybeThreeOfAKind(cards: SortedCards): Option[ThreeOfAKind] = {
@@ -76,13 +94,13 @@ object Hand {
       case List(c1, c2, c3, c4, c5) if c1.value == c2.value =>
         Pair(c1.value, c5.value, c4.value, c3.value)
 
-       case List(c1, c2, c3, c4, c5) if c2.value == c3.value =>
+      case List(c1, c2, c3, c4, c5) if c2.value == c3.value =>
         Pair(c2.value, c5.value, c4.value, c1.value)
 
-       case List(c1, c2, c3, c4, c5) if c3.value == c4.value =>
+      case List(c1, c2, c3, c4, c5) if c3.value == c4.value =>
         Pair(c3.value, c5.value, c2.value, c1.value)
 
-       case List(c1, c2, c3, c4, c5) if c4.value == c5.value =>
+      case List(c1, c2, c3, c4, c5) if c4.value == c5.value =>
         Pair(c4.value, c3.value, c2.value, c1.value)
     }
   }

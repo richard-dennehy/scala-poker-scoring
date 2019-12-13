@@ -145,6 +145,48 @@ class HandSpec extends AnyWordSpec with Matchers {
         }
       }
     }
+
+    "the sorted cards form a straight" should {
+      "produce a Straight hand of the highest valued card" in {
+        forAllPermutationsOf(
+          Six of Spades,
+          Seven of Hearts,
+          Eight of Clubs,
+          Nine of Hearts,
+          Ten of Diamonds
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Straight(Ten)
+        }
+      }
+    }
+
+    "the sorted cards form an Ace-low straight" should {
+      "produce a Five high Straight hand" in {
+        forAllPermutationsOf(
+          Ace of Spades,
+          Two of Hearts,
+          Three of Clubs,
+          Four of Hearts,
+          Five of Diamonds
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Straight(Five)
+        }
+      }
+    }
+
+    "the sorted cards form an Ace-high straight" should {
+      "produce an Ace high Straight hand" in {
+        forAllPermutationsOf(
+          Ten of Spades,
+          Jack of Hearts,
+          Queen of Clubs,
+          King of Hearts,
+          Ace of Diamonds
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Straight(Ace)
+        }
+      }
+    }
   }
 
   private def forAllPermutationsOf(
