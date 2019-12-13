@@ -10,20 +10,18 @@ object Poker {
   }
 
   private def breakTieForDifferentHands(left: Hand, right: Hand): MaybeResult = {
-    leftWins(left, right).orElse(rightWins(left, right))
+    if (rankingOf(left) > rankingOf(right)) {
+      Known(Winner(left))
+    } else if (rankingOf(right) > rankingOf(left)) {
+      Known(Winner(right))
+    } else Unknown
   }
 
-  private def leftWins(left: Hand, right: Hand): MaybeResult = {
-    (left, right) match {
-      case (l: ThreeOfAKind, _: TwoPair | _: Pair | _: HighCard) => Known(Winner(l))
-      case (l: TwoPair, _: Pair | _: HighCard) => Known(Winner(l))
-      case (l: Pair, _: HighCard) => Known(Winner(l))
-      case _ => Unknown
-    }
-  }
-
-  private def rightWins(left: Hand, right: Hand): MaybeResult = {
-    leftWins(right, left)
+  private def rankingOf(hand: Hand) = hand match {
+    case _: ThreeOfAKind => 4
+    case _: TwoPair => 3
+    case _: Pair => 2
+    case _: HighCard => 1
   }
 
   private def breakTieForSameHand(left: Hand, right: Hand): MaybeResult = {
