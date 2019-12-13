@@ -5,10 +5,10 @@ import poker.{Hand, Poker, Tie, Winner}
 
 trait HandMatchers {
   def beat(rightHand: Hand): Matcher[Hand] = (leftHand: Hand) => {
-    val firstWinner = Poker.winnerOf(leftHand, rightHand)
+    val firstWinner = Poker.chooseWinner(leftHand, rightHand)
     val winsOnLeftSide = firstWinner == Winner(leftHand)
 
-    val secondWinner = Poker.winnerOf(rightHand, leftHand)
+    val secondWinner = Poker.chooseWinner(rightHand, leftHand)
     val winsOnRightSide = secondWinner == Winner(leftHand)
 
     MatchResult(
@@ -27,10 +27,10 @@ trait HandMatchers {
   }
 
   def tieWith(rightHand: Hand): Matcher[Hand] = (leftHand: Hand) => {
-    val firstTie = Poker.winnerOf(leftHand, rightHand)
+    val firstTie = Poker.chooseWinner(leftHand, rightHand)
     val tiesOnLeftSide = firstTie == Tie
 
-    val secondTie = Poker.winnerOf(rightHand, leftHand)
+    val secondTie = Poker.chooseWinner(rightHand, leftHand)
     val tiesOnRightSide = secondTie == Tie
 
     MatchResult(

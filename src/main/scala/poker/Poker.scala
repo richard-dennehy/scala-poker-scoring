@@ -1,102 +1,99 @@
 package poker
 
 object Poker {
-  def winnerOf(left: Hand, right: Hand): Result = {
-    leftWins(left, right)
-      .orElse(rightWins(left, right))
-      .getOrElse(Tie)
+  def chooseWinner(left: Hand, right: Hand): Result = {
+    breakTieForDifferentHands(left, right)
+      .orElse(breakTieForSameHand(left, right)) match {
+      case Known(result) => result
+      case Unknown => throw new IllegalStateException(s"Unable to find winner for $left vs $right")
+    }
   }
 
-  private def leftWins(left: Hand, right: Hand): Option[Result] = {
-    leftHandTypeWins
-      .orElse(leftTwoPairWins)
-      .orElse(leftPairWins)
-      .orElse(leftHighCardWins)
-      .lift
-      .apply((left, right))
+  private def breakTieForDifferentHands(left: Hand, right: Hand): MaybeResult = {
+    leftWins(left, right).orElse(rightWins(left, right))
   }
 
-  private def rightWins(left: Hand, right: Hand): Option[Result] = leftWins(right, left)
-
-  type MatchResult = PartialFunction[(Hand, Hand), Result]
-
-  private lazy val leftHandTypeWins: MatchResult = {
-    case (tp: TwoPair, _: Pair | _: HighCard) =>
-      Winner(tp)
-    case (p1: Pair, _: HighCard) =>
-      Winner(p1)
+  private def leftWins(left: Hand, right: Hand): MaybeResult = {
+    (left, right) match {
+      case (l: ThreeOfAKind, _: TwoPair | _: Pair | _: HighCard) => Known(Winner(l))
+      case (l: TwoPair, _: Pair | _: HighCard) => Known(Winner(l))
+      case (l: Pair, _: HighCard) => Known(Winner(l))
+      case _ => Unknown
+    }
   }
 
-  private lazy val leftTwoPairWins: MatchResult = {
-    case (tp1: TwoPair, tp2: TwoPair)
-      if tp1.highestPair > tp2.highestPair =>
-      Winner(tp1)
-
-    case (tp1: TwoPair, tp2: TwoPair)
-      if tp1.highestPair == tp2.highestPair &&
-        tp1.lowestPair > tp2.lowestPair =>
-      Winner(tp1)
-
-    case (tp1: TwoPair, tp2: TwoPair)
-      if tp1.highestPair == tp2.highestPair &&
-        tp1.lowestPair == tp2.lowestPair &&
-        tp1.unused > tp2.unused =>
-      Winner(tp1)
+  private def rightWins(left: Hand, right: Hand): MaybeResult = {
+    leftWins(right, left)
   }
 
-  private lazy val leftPairWins: MatchResult = {
-    case (p1: Pair, p2: Pair)
-      if p1.of > p2.of =>
-      Winner(p1)
-
-    case (p1: Pair, p2: Pair)
-      if p1.of == p2.of &&
-        p1.highestUnused > p2.highestUnused =>
-      Winner(p1)
-
-    case (p1: Pair, p2: Pair)
-      if p1.of == p2.of &&
-        p1.highestUnused == p2.highestUnused &&
-        p1.secondUnused > p2.secondUnused =>
-      Winner(p1)
-
-    case (p1: Pair, p2: Pair)
-      if p1.of == p2.of &&
-        p1.highestUnused == p2.highestUnused &&
-        p1.secondUnused == p2.secondUnused &&
-        p1.thirdUnused > p2.thirdUnused =>
-      Winner(p1)
+  private def breakTieForSameHand(left: Hand, right: Hand): MaybeResult = {
+    (left, right) match {
+      case (tk1: ThreeOfAKind, tk2: ThreeOfAKind) => tryResolve(tieBreakersForThreeOfAKind)(tk1, tk2)
+      case (tp1: TwoPair, tp2: TwoPair) => tryResolve(tieBreakersForTwoPairs)(tp1, tp2)
+      case (p1: Pair, p2: Pair) => tryResolve(tieBreakersForPairs)(p1, p2)
+      case (hc1: HighCard, hc2: HighCard) => tryResolve(tieBreakersForHighCards)(hc1, hc2)
+      case _ => Unknown
+    }
   }
 
-  private lazy val leftHighCardWins: MatchResult = {
-    case (hc1: HighCard, hc2: HighCard)
-      if hc1.of > hc2.of =>
-      Winner(hc1)
+  type TieBreaker[T <: Hand] = T => FaceValue
 
-    case (hc1: HighCard, hc2: HighCard)
-      if hc1.of == hc2.of &&
-        hc1.highestUnused > hc2.highestUnused =>
-      Winner(hc1)
+  private def tieBreakersForThreeOfAKind: List[TieBreaker[ThreeOfAKind]] = {
+    List(
+      _.of,
+      _.highestUnused,
+      _.lowestUnused
+    )
+  }
 
-    case (hc1: HighCard, hc2: HighCard)
-      if hc1.of == hc2.of &&
-        hc1.highestUnused == hc2.highestUnused &&
-        hc1.secondUnused > hc2.secondUnused =>
-      Winner(hc1)
+  private def tieBreakersForTwoPairs: List[TieBreaker[TwoPair]] = {
+    List(
+      _.highestPair,
+      _.lowestPair,
+      _.unused
+    )
+  }
 
-    case (hc1: HighCard, hc2: HighCard)
-      if hc1.of == hc2.of &&
-        hc1.highestUnused == hc2.highestUnused &&
-        hc1.secondUnused == hc2.secondUnused &&
-        hc1.thirdUnused > hc2.thirdUnused =>
-      Winner(hc1)
+  private def tieBreakersForPairs: List[TieBreaker[Pair]] = {
+    List(
+      _.of,
+      _.highestUnused,
+      _.secondUnused,
+      _.thirdUnused
+    )
+  }
 
-    case (hc1: HighCard, hc2: HighCard)
-      if hc1.of == hc2.of &&
-        hc1.highestUnused == hc2.highestUnused &&
-        hc1.secondUnused == hc2.secondUnused &&
-        hc1.thirdUnused == hc2.thirdUnused &&
-        hc1.fourthUnused > hc2.fourthUnused =>
-      Winner(hc1)
+  private def tieBreakersForHighCards: List[TieBreaker[HighCard]] = {
+    List(
+      _.of,
+      _.highestUnused,
+      _.secondUnused,
+      _.thirdUnused,
+      _.fourthUnused
+    )
+  }
+
+  private def tryResolve[T <: Hand](tieBreakers: List[TieBreaker[T]]): ((T, T) => MaybeResult) = (left, right) => {
+    tieBreakers match {
+      case Nil => Unknown
+      case h :: _ if h(left) > h(right) => Known(Winner(left))
+      case h :: _ if h(left) < h(right) => Known(Winner(right))
+      case h :: Nil if h(left) == h(right) => Known(Tie)
+      case h :: rest if h(left) == h(right) => tryResolve(rest)(left, right)
+    }
+  }
+
+  // effectively a specialised Option for Results
+  // run TieBreakers until either a Winner or definite Tie is found, and return Known,
+  // or return Unknown if more TieBreakers need to be run.
+  // if no more TieBreakers left and result is still unknown, throw exception
+  private sealed trait MaybeResult {
+    def orElse(other: => MaybeResult): MaybeResult
+  }
+  private case class  Known(result: Result) extends MaybeResult {
+    override def orElse(other: => MaybeResult): MaybeResult = this
+  }
+  private case object Unknown extends MaybeResult {
+    override def orElse(other: => MaybeResult): MaybeResult = other
   }
 }

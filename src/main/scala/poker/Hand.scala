@@ -7,20 +7,20 @@ sealed trait Hand {
 }
 
 // base case
-case class HighCard(of: Value, highestUnused: Value, secondUnused: Value, thirdUnused: Value, fourthUnused: Value) extends Hand {
+case class HighCard(of: FaceValue, highestUnused: FaceValue, secondUnused: FaceValue, thirdUnused: FaceValue, fourthUnused: FaceValue) extends Hand {
   override def prettyPrint: String = s"High card: $of, with $highestUnused, $secondUnused, $thirdUnused, and $fourthUnused"
 }
 
-case class Pair(of: Value, highestUnused: Value, secondUnused: Value, thirdUnused: Value) extends Hand {
+case class Pair(of: FaceValue, highestUnused: FaceValue, secondUnused: FaceValue, thirdUnused: FaceValue) extends Hand {
   override def prettyPrint: String = s"Pair of ${of}s, with $highestUnused, $secondUnused, and $thirdUnused"
 }
 
-case class TwoPair(lowestPair: Value, highestPair: Value, unused: Value) extends Hand {
+case class TwoPair(lowestPair: FaceValue, highestPair: FaceValue, unused: FaceValue) extends Hand {
   override def prettyPrint: String = s"Pair of ${highestPair}s and ${lowestPair}s, with $unused"
 }
 
-case class ThreeOfAKind(of: Value, unused: (Value, Value)) extends Hand {
-  override def prettyPrint: String = s"Three of a Kind of ${of}s, with ${unused._1} and ${unused._2}"
+case class ThreeOfAKind(of: FaceValue, highestUnused: FaceValue, lowestUnused: FaceValue) extends Hand {
+  override def prettyPrint: String = s"Three of a Kind of ${of}s, with $highestUnused and $lowestUnused"
 }
 
 object Hand {
@@ -49,13 +49,13 @@ object Hand {
   private def maybeThreeOfAKind(cards: SortedCards): Option[ThreeOfAKind] = {
     Some(cards) collect {
       case List(c1, c2, c3, c4, c5) if haveSameValue(c1, c2, c3) =>
-        ThreeOfAKind(c1.value, (c4.value, c5.value))
+        ThreeOfAKind(c1.value, c5.value, c4.value)
 
       case List(c1, c2, c3, c4, c5) if haveSameValue(c2, c3, c4) =>
-        ThreeOfAKind(c2.value, (c1.value, c5.value))
+        ThreeOfAKind(c2.value, c5.value, c1.value)
 
       case List(c1, c2, c3, c4, c5) if haveSameValue(c3, c4, c5) =>
-        ThreeOfAKind(c3.value, (c1.value, c2.value))
+        ThreeOfAKind(c3.value, c2.value, c1.value)
     }
   }
 
@@ -87,7 +87,7 @@ object Hand {
     }
   }
 
-  private def findPairIn(sortedCards: SortedCards): Option[(Value, SortedCards)] = {
+  private def findPairIn(sortedCards: SortedCards): Option[(FaceValue, SortedCards)] = {
     sortedCards.sliding(2).collectFirst {
       case List(c1, c2) if c1.value == c2.value => (c1.value, sortedCards.filterNot(_.value == c1.value))
     }

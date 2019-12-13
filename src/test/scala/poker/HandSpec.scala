@@ -113,7 +113,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Three of Hearts,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Two, (Three, King))
+          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Two, King, Three)
         }
       }
     }
@@ -127,7 +127,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Three of Spades,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Three, (Two, King))
+          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Three, King, Two)
         }
       }
     }
@@ -141,7 +141,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           King of Spades,
           King of Hearts
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe ThreeOfAKind(King, (Two, Three))
+          Hand.fromTuple(cards) shouldBe ThreeOfAKind(King, Three, Two)
         }
       }
     }

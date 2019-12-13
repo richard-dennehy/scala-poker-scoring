@@ -1,6 +1,6 @@
 package poker
 
-case class Card(value: Value, suit: Suit) extends Ordered[Card] {
+case class Card(value: FaceValue, suit: Suit) extends Ordered[Card] {
   override def toString: String = s"$value of $suit"
 
   override def compare(that: Card): Int = this.value.compare(that.value)

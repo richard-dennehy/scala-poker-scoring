@@ -27,6 +27,26 @@ class TwoPairSpec extends AnyWordSpec with Matchers with HandMatchers  {
       winningHand should beat(losingHand)
     }
 
+    "beat any High Card hand" in {
+      val winningHand = Hand.from(
+        Two of Diamonds,
+        Two of Spades,
+        Three of Hearts,
+        Three of Clubs,
+        Five of Diamonds
+      )
+
+      val losingHand = Hand.from(
+        Two of Hearts,
+        Four of Spades,
+        Nine of Clubs,
+        Ten of Clubs,
+        Jack of Clubs
+      )
+
+      winningHand should beat(losingHand)
+    }
+
     "tie with a Two Pair hand, if the unused card has the same rank" in {
       val firstHand = Hand.from(
         Two of Diamonds,
