@@ -50,6 +50,10 @@ case class FullHouse(triplet: FaceValue, pair: FaceValue) extends Hand {
   override def prettyPrint: String = s"Full house, ${triplet}s over ${pair}s"
 }
 
+case class FourOfAKind(of: FaceValue)(val unused: FaceValue) extends Hand {
+  override def prettyPrint: String = s"Four of a kind of ${of}s, with $unused"
+}
+
 object Hand {
   def fromTuple(
     cards: (Card, Card, Card, Card, Card)
@@ -67,13 +71,22 @@ object Hand {
   ): Hand = {
     val sortedCards = List(first, second, third, fourth, fifth).sorted
 
-    maybeFullHouse(sortedCards)
+    maybeFourOfAKind(sortedCards)
+      .orElse(maybeFullHouse(sortedCards))
       .orElse(maybeFlush(sortedCards))
       .orElse(maybeStraight(sortedCards))
       .orElse(maybeThreeOfAKind(sortedCards))
       .orElse(maybeTwoPair(sortedCards))
       .orElse(maybePair(sortedCards))
       .getOrElse(makeHighCard(sortedCards))
+  }
+
+  private def maybeFourOfAKind(cards: SortedCards): Option[FourOfAKind] = {
+    for {
+      (first, rest) <- findPairIn(cards)
+      (second, remaining) <- findPairIn(rest)
+      if first == second
+    } yield FourOfAKind(first)(remaining.head.value)
   }
 
   private def maybeFullHouse(cards: SortedCards): Option[FullHouse] = {
@@ -132,24 +145,24 @@ object Hand {
   }
 
   private def maybePair(sortedCards: SortedCards): Option[Pair] = {
-    Some(sortedCards) collect {
-      case List(c1, c2, c3, c4, c5) if c1.value == c2.value =>
-        Pair(c1.value)(c5.value, c4.value, c3.value)
-
-      case List(c1, c2, c3, c4, c5) if c2.value == c3.value =>
-        Pair(c2.value)(c5.value, c4.value, c1.value)
-
-      case List(c1, c2, c3, c4, c5) if c3.value == c4.value =>
-        Pair(c3.value)(c5.value, c2.value, c1.value)
-
-      case List(c1, c2, c3, c4, c5) if c4.value == c5.value =>
-        Pair(c4.value)(c3.value, c2.value, c1.value)
+    findPairIn(sortedCards).map { case (value, rest) =>
+      Pair(value)(rest(2).value, rest(1).value, rest.head.value)
     }
   }
 
   private def findPairIn(sortedCards: SortedCards): Option[(FaceValue, SortedCards)] = {
-    sortedCards.sliding(2).collectFirst {
-      case List(c1, c2) if c1.value == c2.value => (c1.value, sortedCards.filterNot(_.value == c1.value))
+    Some(sortedCards) collect {
+      case c1 :: c2 :: rest if c1.value == c2.value =>
+        (c1.value, rest)
+
+      case c1 :: c2 :: c3 :: rest if c2.value == c3.value =>
+        (c2.value, c1 :: rest)
+
+      case c1 :: c2 :: c3 :: c4 :: rest if c3.value == c4.value =>
+        (c3.value, c1 :: c2 :: rest)
+
+      case c1 :: c2 :: c3 :: c4 :: c5 :: Nil if c4.value == c5.value =>
+        (c4.value, c1 :: c2 :: c3 :: Nil)
     }
   }
 

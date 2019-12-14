@@ -18,6 +18,7 @@ object Poker {
   }
 
   private def rankingOf(hand: Hand) = hand match {
+    case _: FourOfAKind => 8
     case _: FullHouse => 7
     case _: Flush => 6
     case _: Straight => 5
@@ -29,6 +30,7 @@ object Poker {
 
   private def breakTieForSameHand(left: Hand, right: Hand): MaybeResult = {
     (left, right) match {
+      case (fk1: FourOfAKind, fk2: FourOfAKind) => tryResolve(tieBreakersForFourOfAKind)(fk1, fk2)
       case (fh1: FullHouse, fh2: FullHouse) => tryResolve(tieBreakersForFullHouse)(fh1, fh2)
       case (f1: Flush, f2: Flush) => tryResolve(tieBreakersForFlush)(f1, f2)
       case (s1: Straight, s2: Straight) => tryResolve(tieBreakersForStraight)(s1, s2)
@@ -41,6 +43,13 @@ object Poker {
   }
 
   type TieBreaker[T <: Hand] = T => FaceValue
+
+  private def tieBreakersForFourOfAKind: List[TieBreaker[FourOfAKind]] = {
+    List(
+      _.of,
+      _.unused
+    )
+  }
 
   private def tieBreakersForFullHouse: List[TieBreaker[FullHouse]] = {
     List(
@@ -98,7 +107,7 @@ object Poker {
     )
   }
 
-  private def tryResolve[T <: Hand](tieBreakers: List[TieBreaker[T]]): ((T, T) => MaybeResult) = (left, right) => {
+  private def tryResolve[T <: Hand](tieBreakers: List[TieBreaker[T]]): (T, T) => MaybeResult = (left, right) => {
     tieBreakers match {
       case Nil => Unresolved
       case h :: _ if h(left) > h(right) => Resolved(Winner(left))

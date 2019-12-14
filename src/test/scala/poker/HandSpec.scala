@@ -258,6 +258,20 @@ class HandSpec extends AnyWordSpec with Matchers {
         }
       }
     }
+
+    "the cards contain four cards of the same value" should {
+      "produce a Four of a Kind of the quadruplet" in {
+        forAllPermutationsOf(
+          Two of Spades,
+          Two of Clubs,
+          Two of Diamonds,
+          Two of Hearts,
+          Ace of Spades
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe FourOfAKind(Two)(Ace)
+        }
+      }
+    }
   }
 
   private def forAllPermutationsOf(
