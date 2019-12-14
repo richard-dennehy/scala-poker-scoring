@@ -27,6 +27,16 @@ case class Straight(highest: FaceValue) extends Hand {
   override def prettyPrint: String = s"$highest high Straight"
 }
 
+case class Flush(suit: Suit)(
+  val highestRanked: FaceValue,
+  val secondHighest: FaceValue,
+  val thirdHighest: FaceValue,
+  val fourthHighest: FaceValue,
+  val lowestRanked: FaceValue
+) extends Hand {
+  override def prettyPrint: String = s"$highestRanked high $suit Flush, with $secondHighest, $thirdHighest, $fourthHighest, and $lowestRanked"
+}
+
 object Hand {
   def fromTuple(
     cards: (Card, Card, Card, Card, Card)
@@ -44,11 +54,22 @@ object Hand {
   ): Hand = {
     val sortedCards = List(first, second, third, fourth, fifth).sorted
 
-    maybeStraight(sortedCards)
+    maybeFlush(sortedCards)
+      .orElse(maybeStraight(sortedCards))
       .orElse(maybeThreeOfAKind(sortedCards))
       .orElse(maybeTwoPair(sortedCards))
       .orElse(maybePair(sortedCards))
       .getOrElse(makeHighCard(sortedCards))
+  }
+
+  private def maybeFlush(cards: SortedCards): Option[Flush] = {
+    val suits = cards.map(_.suit).toSet
+
+    if (suits.size == 1) {
+      Some(Flush(suits.head)(cards(4).value, cards(3).value, cards(2).value, cards(1).value, cards.head.value))
+    } else {
+      None
+    }
   }
 
   private def maybeStraight(cards: SortedCards): Option[Straight] = {

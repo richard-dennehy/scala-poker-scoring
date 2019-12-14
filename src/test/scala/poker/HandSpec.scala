@@ -146,7 +146,7 @@ class HandSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    "the sorted cards form a straight" should {
+    "the sorted cards are all adjacent to each other" should {
       "produce a Straight hand of the highest valued card" in {
         forAllPermutationsOf(
           Six of Spades,
@@ -160,7 +160,7 @@ class HandSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    "the sorted cards form an Ace-low straight" should {
+    "the cards contain an Ace, a Two, a Three, a Four, and a Five" should {
       "produce a Five high Straight hand" in {
         forAllPermutationsOf(
           Ace of Spades,
@@ -174,7 +174,7 @@ class HandSpec extends AnyWordSpec with Matchers {
       }
     }
 
-    "the sorted cards form an Ace-high straight" should {
+    "the cards contain a Ten, a Jack, a Queen, a King, and an Ace" should {
       "produce an Ace high Straight hand" in {
         forAllPermutationsOf(
           Ten of Spades,
@@ -184,6 +184,63 @@ class HandSpec extends AnyWordSpec with Matchers {
           Ace of Diamonds
         ) { cards =>
           Hand.fromTuple(cards) shouldBe Straight(Ace)
+        }
+      }
+    }
+
+    "all cards have the same suit, and do not form a straight" should {
+      "produce a Flush hand of the highest ranked card" in {
+        forAllPermutationsOf(
+          Two of Hearts,
+          Four of Hearts,
+          Seven of Hearts,
+          Ten of Hearts,
+          King of Hearts
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Flush(Hearts)(King, Ten, Seven, Four, Two)
+        }
+      }
+    }
+
+    // can't happen in a single deck game, but doesn't hurt to check
+    "all cards have the same suit, and three of the face values are the same" should {
+      "produce a Flush hand of the highest ranked card" in {
+        forAllPermutationsOf(
+          Two of Hearts,
+          Two of Hearts,
+          Two of Hearts,
+          Ten of Hearts,
+          King of Hearts
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Flush(Hearts)(King, Ten, Two, Two, Two)
+        }
+      }
+    }
+
+    "all cards have the same suit, and there are two pairs of face values" should {
+      "produce a Flush hand of the highest ranked card" in {
+        forAllPermutationsOf(
+          Two of Hearts,
+          Two of Hearts,
+          Ten of Hearts,
+          Ten of Hearts,
+          King of Hearts
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Flush(Hearts)(King, Ten, Ten, Two, Two)
+        }
+      }
+    }
+
+    "all cards have the same suit, and two of the face values are the same" should {
+      "produce a Flush hand of the highest ranked card" in {
+        forAllPermutationsOf(
+          Two of Hearts,
+          Two of Hearts,
+          Five of Hearts,
+          Ten of Hearts,
+          King of Hearts
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe Flush(Hearts)(King, Ten, Five, Two, Two)
         }
       }
     }

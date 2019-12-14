@@ -17,7 +17,7 @@ class PairSpec extends AnyWordSpec with Matchers with HandMatchers {
 
       val losingHand = Hand.from(
         Ace of Diamonds,
-        Three of Diamonds,
+        Three of Spades,
         Four of Diamonds,
         Five of Diamonds,
         Seven of Diamonds,
