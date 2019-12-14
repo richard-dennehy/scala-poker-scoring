@@ -18,6 +18,7 @@ object Poker {
   }
 
   private def rankingOf(hand: Hand) = hand match {
+    case _: StraightFlush => 9
     case _: FourOfAKind => 8
     case _: FullHouse => 7
     case _: Flush => 6
@@ -30,6 +31,7 @@ object Poker {
 
   private def breakTieForSameHand(left: Hand, right: Hand): MaybeResult = {
     (left, right) match {
+      case (sf1: StraightFlush, sf2: StraightFlush) => tryResolve(tieBreakersForStraightFlush)(sf1, sf2)
       case (fk1: FourOfAKind, fk2: FourOfAKind) => tryResolve(tieBreakersForFourOfAKind)(fk1, fk2)
       case (fh1: FullHouse, fh2: FullHouse) => tryResolve(tieBreakersForFullHouse)(fh1, fh2)
       case (f1: Flush, f2: Flush) => tryResolve(tieBreakersForFlush)(f1, f2)
@@ -43,6 +45,20 @@ object Poker {
   }
 
   type TieBreaker[T <: Hand] = T => FaceValue
+
+  private def tryResolve[T <: Hand](tieBreakers: List[TieBreaker[T]]): (T, T) => MaybeResult = (left, right) => {
+    tieBreakers match {
+      case Nil => Unresolved
+      case h :: _ if h(left) > h(right) => Resolved(Winner(left))
+      case h :: _ if h(left) < h(right) => Resolved(Winner(right))
+      case h :: Nil if h(left) == h(right) => Resolved(Tie)
+      case h :: rest if h(left) == h(right) => tryResolve(rest)(left, right)
+    }
+  }
+
+  private def tieBreakersForStraightFlush: List[TieBreaker[StraightFlush]] = {
+    List(_.highest.value)
+  }
 
   private def tieBreakersForFourOfAKind: List[TieBreaker[FourOfAKind]] = {
     List(
@@ -105,16 +121,6 @@ object Poker {
       _.thirdUnused,
       _.fourthUnused
     )
-  }
-
-  private def tryResolve[T <: Hand](tieBreakers: List[TieBreaker[T]]): (T, T) => MaybeResult = (left, right) => {
-    tieBreakers match {
-      case Nil => Unresolved
-      case h :: _ if h(left) > h(right) => Resolved(Winner(left))
-      case h :: _ if h(left) < h(right) => Resolved(Winner(right))
-      case h :: Nil if h(left) == h(right) => Resolved(Tie)
-      case h :: rest if h(left) == h(right) => tryResolve(rest)(left, right)
-    }
   }
 
   // effectively a specialised Option for Results

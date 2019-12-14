@@ -54,6 +54,14 @@ case class FourOfAKind(of: FaceValue)(val unused: FaceValue) extends Hand {
   override def prettyPrint: String = s"Four of a kind of ${of}s, with $unused"
 }
 
+case class StraightFlush(highest: Card) extends Hand {
+  override def prettyPrint: String = if (highest.value == Ace) {
+    s"Royal Flush (${highest.suit})"
+  } else {
+    s"${highest.value} high Straight Flush (${highest.suit})"
+  }
+}
+
 object Hand {
   def fromTuple(
     cards: (Card, Card, Card, Card, Card)
@@ -71,7 +79,8 @@ object Hand {
   ): Hand = {
     val sortedCards = List(first, second, third, fourth, fifth).sorted
 
-    maybeFourOfAKind(sortedCards)
+    maybeStraightFlush(sortedCards)
+      .orElse(maybeFourOfAKind(sortedCards))
       .orElse(maybeFullHouse(sortedCards))
       .orElse(maybeFlush(sortedCards))
       .orElse(maybeStraight(sortedCards))
@@ -79,6 +88,13 @@ object Hand {
       .orElse(maybeTwoPair(sortedCards))
       .orElse(maybePair(sortedCards))
       .getOrElse(makeHighCard(sortedCards))
+  }
+
+  private def maybeStraightFlush(cards: SortedCards): Option[StraightFlush] = {
+    for {
+      flush <- maybeFlush(cards)
+      straight <- maybeStraight(cards)
+    } yield StraightFlush(straight.highest of flush.suit)
   }
 
   private def maybeFourOfAKind(cards: SortedCards): Option[FourOfAKind] = {

@@ -272,6 +272,48 @@ class HandSpec extends AnyWordSpec with Matchers {
         }
       }
     }
+
+    "the sorted cards are all of the same suit, and are all adjacent" should {
+      "produce a Straight Flush of the highest ranked card" in {
+        forAllPermutationsOf(
+          Two of Diamonds,
+          Three of Diamonds,
+          Four of Diamonds,
+          Five of Diamonds,
+          Six of Diamonds
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe StraightFlush(Six of Diamonds)
+        }
+      }
+    }
+
+    "the cards contain a Ten, a Jack, a Queen, a King, and an Ace, all of the same suit" should {
+      "produce an Ace-high Straight Flush" in {
+        forAllPermutationsOf(
+          Ten of Diamonds,
+          Jack of Diamonds,
+          Queen of Diamonds,
+          King of Diamonds,
+          Ace of Diamonds
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe StraightFlush(Ace of Diamonds)
+        }
+      }
+    }
+
+    "the cards contain an Ace, a Two, a Three, a Four, and a Five, all of the same suit" should {
+      "produce an Five-high Straight Flush" in {
+        forAllPermutationsOf(
+          Ace of Diamonds,
+          Two of Diamonds,
+          Three of Diamonds,
+          Four of Diamonds,
+          Five of Diamonds
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe StraightFlush(Five of Diamonds)
+        }
+      }
+    }
   }
 
   private def forAllPermutationsOf(
