@@ -18,6 +18,7 @@ object Poker {
   }
 
   private def rankingOf(hand: Hand) = hand match {
+    case _: FullHouse => 7
     case _: Flush => 6
     case _: Straight => 5
     case _: ThreeOfAKind => 4
@@ -28,6 +29,7 @@ object Poker {
 
   private def breakTieForSameHand(left: Hand, right: Hand): MaybeResult = {
     (left, right) match {
+      case (fh1: FullHouse, fh2: FullHouse) => tryResolve(tieBreakersForFullHouse)(fh1, fh2)
       case (f1: Flush, f2: Flush) => tryResolve(tieBreakersForFlush)(f1, f2)
       case (s1: Straight, s2: Straight) => tryResolve(tieBreakersForStraight)(s1, s2)
       case (tk1: ThreeOfAKind, tk2: ThreeOfAKind) => tryResolve(tieBreakersForThreeOfAKind)(tk1, tk2)
@@ -39,6 +41,13 @@ object Poker {
   }
 
   type TieBreaker[T <: Hand] = T => FaceValue
+
+  private def tieBreakersForFullHouse: List[TieBreaker[FullHouse]] = {
+    List(
+      _.triplet,
+      _.pair
+    )
+  }
 
   private def tieBreakersForFlush: List[TieBreaker[Flush]] = {
     List(

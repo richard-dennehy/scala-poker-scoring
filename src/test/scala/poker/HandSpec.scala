@@ -15,7 +15,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Nine of Clubs,
           King of Spades
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe HighCard(Ace, King, Nine, Five, Two)
+          Hand.fromTuple(cards) shouldBe HighCard(Ace)(King, Nine, Five, Two)
         }
       }
     }
@@ -29,7 +29,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Ten of Clubs,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe Pair(Two, King, Ten, Three)
+          Hand.fromTuple(cards) shouldBe Pair(Two)(King, Ten, Three)
         }
       }
     }
@@ -43,7 +43,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Four of Clubs,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe Pair(Three, King, Four, Two)
+          Hand.fromTuple(cards) shouldBe Pair(Three)(King, Four, Two)
         }
       }
     }
@@ -57,7 +57,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Four of Clubs,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe Pair(Four, King, Three, Two)
+          Hand.fromTuple(cards) shouldBe Pair(Four)(King, Three, Two)
         }
       }
     }
@@ -71,7 +71,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Ten of Clubs,
           Ten of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe Pair(Ten, Five, Three, Two)
+          Hand.fromTuple(cards) shouldBe Pair(Ten)(Five, Three, Two)
         }
       }
     }
@@ -85,7 +85,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Four of Clubs,
           Four of Hearts
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe TwoPair(Three, Four, Two)
+          Hand.fromTuple(cards) shouldBe TwoPair(Three, Four)(Two)
         }
       }
     }
@@ -99,7 +99,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Three of Hearts,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe TwoPair(Two, Three, King)
+          Hand.fromTuple(cards) shouldBe TwoPair(Two, Three)(King)
         }
       }
     }
@@ -113,7 +113,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Three of Hearts,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Two, King, Three)
+          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Two)(King, Three)
         }
       }
     }
@@ -127,7 +127,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           Three of Spades,
           King of Diamonds
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Three, King, Two)
+          Hand.fromTuple(cards) shouldBe ThreeOfAKind(Three)(King, Two)
         }
       }
     }
@@ -141,7 +141,7 @@ class HandSpec extends AnyWordSpec with Matchers {
           King of Spades,
           King of Hearts
         ) { cards =>
-          Hand.fromTuple(cards) shouldBe ThreeOfAKind(King, Three, Two)
+          Hand.fromTuple(cards) shouldBe ThreeOfAKind(King)(Three, Two)
         }
       }
     }
@@ -241,6 +241,20 @@ class HandSpec extends AnyWordSpec with Matchers {
           King of Hearts
         ) { cards =>
           Hand.fromTuple(cards) shouldBe Flush(Hearts)(King, Ten, Five, Two, Two)
+        }
+      }
+    }
+
+    "the cards contain a pair of the same face value and a triple of the same face value" should {
+      "produce a Full House hand of the duplicate and triplicate values" in {
+        forAllPermutationsOf(
+          Ace of Spades,
+          Ace of Hearts,
+          Ace of Clubs,
+          King of Diamonds,
+          King of Spades
+        ) { cards =>
+          Hand.fromTuple(cards) shouldBe FullHouse(Ace, King)
         }
       }
     }
